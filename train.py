@@ -6,4 +6,9 @@ def simple_regression(X, y):
     
 if __name__ == '__main__':
     df = pd.read_csv('data/train.csv')
+    
+    for col in df.columns:
+        if(df[col].isnull().any()):
+            del df[col]
+    
     print(df.head())
