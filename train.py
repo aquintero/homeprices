@@ -3,9 +3,10 @@ import pandas as pd
 
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
 from sklearn.svm import SVR
-from sklearn.linear_model import ElasticNetCV
+from sklearn.linear_model import RandomizedLasso
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.feature_selection import RFE
+from sklearn.feature_selection import RFECV
+from sklearn.model_selection import KFold, GridSearchCV
 
 les = dict()
 ohes = dict()
@@ -75,6 +76,20 @@ def preprocess(df):
     df = pd.concat([df, df_encoded], axis = 1)
     
     return df
+
+def SVR_model():
+    model = SVR()
+    param_grid = dict(
+        C = np.logspace(-3, 3, 10),
+        epsilon = np.logspace(-3, 3, 10)
+    )
+    kf = KFold(n_splits = 5, shuffle = True, random_state = np.random.randint(1000))
+    search = GridSearchCV(model, param_grid = param_grid, cv = kf, scoring = 'r2')
+    
+    return search
+    
+def forest_model():
+    return RandomForestRegressor(n_estimators = 300)
     
 if __name__ == '__main__':
     np.random.seed(0)
@@ -83,6 +98,8 @@ if __name__ == '__main__':
     
     train_test_data = pd.concat([train_data, test_data])
     preprocess_train(train_test_data)
+    
+    print('Training...')
     
     train = preprocess(train_data)
     test = preprocess(test_data)
@@ -93,8 +110,10 @@ if __name__ == '__main__':
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
     
-    model = RandomForestRegressor(n_estimators = 100, random_state = np.random.randint(1000))
+    model = forest_model()
     model.fit(X, y)
+    
+    print('Testing...')
     
     X = test.values
     X = scaler.transform(X)
